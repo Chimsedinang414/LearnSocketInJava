@@ -14,7 +14,6 @@ public class ServerToClient {
         while (true) {
             Socket socket = server.accept(); // chờ client kết nối
             System.out.println("Có client kết nối");
-
             DataOutputStream dout = new DataOutputStream(socket.getOutputStream());
 
             // Gửi thời gian hiện tại
