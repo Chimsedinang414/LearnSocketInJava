@@ -1,127 +1,170 @@
-package Socket.TCPIP;
-
-import java.io.*;
-import java.net.*;
-import java.util.Stack;
-
-public class ServerTCP {
-
-    public static void main(String[] args) {
-        try {
-            ServerSocket server = new ServerSocket(5000);
-            System.out.println("Server running...");
-
-            while (true) {
-                Socket client = server.accept();
-                System.out.println("Client connected");
-
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(client.getInputStream()));
-                BufferedWriter out = new BufferedWriter(
-                        new OutputStreamWriter(client.getOutputStream()));
-
-                String request = in.readLine();
-
-                String response = handleRequest(request);
-
-                out.write(response);
-                out.newLine();
-                out.flush();
-
-                client.close();
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    // ✅ Xử lý theo protocol
-    static String handleRequest(String req) {
-        try {
-            String[] parts = req.split("\\|");
-
-            if (parts[0].equals("CALC")) {
-                String expr = parts[1];
-                double result = evaluate(expr);
-                return "RESULT|" + result;
-            }
-
-            return "ERROR|Unknown command";
-
-        } catch (Exception e) {
-            return "ERROR|Invalid expression";
-        }
-    }
-
-    // ====== XỬ LÝ BIỂU THỨC ======
-
-    static int precedence(char op) {
-        if (op == '+' || op == '-') return 1;
-        if (op == '*' || op == '/') return 2;
-        return 0;
-    }
-
-    static String infixToPostfix(String expr) {
-        StringBuilder output = new StringBuilder();
-        Stack<Character> stack = new Stack<>();
-
-        for (int i = 0; i < expr.length(); i++) {
-            char c = expr.charAt(i);
-
-            if (c == ' ') continue;
-
-            if (Character.isDigit(c)) {
-                while (i < expr.length() && Character.isDigit(expr.charAt(i))) {
-                    output.append(expr.charAt(i++));
-                }
-                output.append(" ");
-                i--;
-            }
-            else if (c == '(') stack.push(c);
-
-            else if (c == ')') {
-                while (!stack.isEmpty() && stack.peek() != '(')
-                    output.append(stack.pop()).append(" ");
-                stack.pop();
-            }
-            else {
-                while (!stack.isEmpty() &&
-                        precedence(stack.peek()) >= precedence(c)) {
-                    output.append(stack.pop()).append(" ");
-                }
-                stack.push(c);
-            }
-        }
-
-        while (!stack.isEmpty())
-            output.append(stack.pop()).append(" ");
-
-        return output.toString();
-    }
-
-    static double evaluate(String expr) {
-        String postfix = infixToPostfix(expr);
-        Stack<Double> stack = new Stack<>();
-
-        for (String token : postfix.split(" ")) {
-            if (token.isEmpty()) continue;
-
-            if (token.matches("\\d+")) {
-                stack.push(Double.parseDouble(token));
-            } else {
-                double b = stack.pop();
-                double a = stack.pop();
-
-                switch (token.charAt(0)) {
-                    case '+': stack.push(a + b); break;
-                    case '-': stack.push(a - b); break;
-                    case '*': stack.push(a * b); break;
-                    case '/': stack.push(a / b); break;
-                }
-            }
-        }
-
-        return stack.pop();
-    }
-}
+//package Socket.NhanTin;
+//import javax.swing.*;
+//import java.awt.*;
+//import java.awt.event.*;
+//import java.io.*;
+//import java.net.*;
+//import java.text.SimpleDateFormat;
+//import java.util.Date;
+//
+//public class ClientA {
+//    private JFrame frame;
+//    private JTextArea textArea;
+//    private JTextField textField;
+//    private JButton sendButton;
+//
+//    private PrintWriter out;
+//    private BufferedReader in;
+//    private String username;
+//
+//    public ClientA() {
+//        // nhập username
+//        username = JOptionPane.showInputDialog("Nhập tên của bạn:");
+//
+//        frame = new JFrame("Chat Room - " + username);
+//        textArea = new JTextArea();
+//        textArea.setEditable(false);
+//
+//        textField = new JTextField();
+//        sendButton = new JButton("Gửi");
+//
+//        frame.setLayout(new BorderLayout());
+//        frame.add(new JScrollPane(textArea), BorderLayout.CENTER);
+//
+//        JPanel panel = new JPanel(new BorderLayout());
+//        panel.add(textField, BorderLayout.CENTER);
+//        panel.add(sendButton, BorderLayout.EAST);
+//
+//        frame.add(panel, BorderLayout.SOUTH);
+//
+//        frame.setSize(400, 500);
+//        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        frame.setVisible(true);
+//
+//        // sự kiện gửi
+//        ActionListener sendAction = e -> sendMessage();
+//        sendButton.addActionListener(sendAction);
+//        textField.addActionListener(sendAction);
+//
+//        connectToServer();
+//    }
+//
+//    private void connectToServer() {
+//        try {
+//            Socket socket = new Socket("127.0.0.1", 5000);
+//
+//            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//            out = new PrintWriter(socket.getOutputStream(), true);
+//
+//            // gửi username
+//            out.println(username);
+//
+//            // thread nhận tin
+//            new Thread(() -> {
+//                try {
+//                    String msg;
+//                    while ((msg = in.readLine()) != null) {
+//                        textArea.append(msg + "\n");
+//                    }
+//                } catch (IOException e) {
+//                    textArea.append("Mất kết nối server\n");
+//                }
+//            }).start();
+//
+//        } catch (IOException e) {
+//            JOptionPane.showMessageDialog(frame, "Không kết nối được server");
+//        }
+//    }
+//
+//    private void sendMessage() {
+//        String msg = textField.getText();
+//        if (!msg.isEmpty()) {
+//            out.println(msg);
+//            textField.setText("");
+//        }
+//    }
+//
+//    public static void main(String[] args) {
+//        new ClientA();
+//    }
+//}
+//
+//
+//
+//
+//package UDP;
+//
+//import java.net.*;
+//import java.nio.charset.StandardCharsets;
+//
+//public class UDPDateTimeClient {
+//    public static void main(String[] args) throws Exception {
+//
+//        DatagramSocket clientSocket = new DatagramSocket();
+//        InetAddress IPAddress = InetAddress.getByName("localhost");
+//
+//        byte[] sendData;
+//        byte[] receiveData = new byte[1024];
+//
+//        sendData = "getDate".getBytes(StandardCharsets.UTF_8);
+//
+//        // Gửi request
+//        DatagramPacket sendPacket =
+//                new DatagramPacket(sendData, sendData.length, IPAddress, 9876);
+//        clientSocket.send(sendPacket);
+//
+//        // Nhận phản hồi
+//        DatagramPacket receivePacket =
+//                new DatagramPacket(receiveData, receiveData.length);
+//        clientSocket.receive(receivePacket);
+//
+//
+//        String str = new String(receivePacket.getData(), 0, receivePacket.getLength());
+//
+//        System.out.println("Server trả về: " + str);
+//
+//        clientSocket.close();
+//    }
+//}
+//
+//package UDP;
+//
+//import java.net.*;
+//        import java.text.SimpleDateFormat;
+//import java.util.Date;
+//
+//public class UDPDateTime {
+//    public static void main(String[] args) throws Exception {
+//        DatagramSocket serverSocket = new DatagramSocket(9876);
+//        byte[] receiveData = new byte[1024];
+//
+//        System.out.println("UDP Server đang chạy...");
+//
+//        while (true) {
+//            DatagramPacket receivePacket =
+//                    new DatagramPacket(receiveData, receiveData.length);
+//
+//            serverSocket.receive(receivePacket);
+//
+//            String request = new String(receivePacket.getData(), 0,
+//                    receivePacket.getLength());
+//
+//            System.out.println("Client gửi: " + request);
+//
+//            // Lấy thời gian hiện tại
+//            String time = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
+//                    .format(new Date());
+//
+//            byte[] sendData = time.getBytes();
+//
+//            InetAddress clientIP = receivePacket.getAddress();
+//            int clientPort = receivePacket.getPort();
+//
+//            DatagramPacket sendPacket =
+//                    new DatagramPacket(sendData, sendData.length,
+//                            clientIP, clientPort);
+//
+//            serverSocket.send(sendPacket);
+//        }
+//    }
+//}

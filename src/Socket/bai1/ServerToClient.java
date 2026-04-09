@@ -16,7 +16,7 @@ public class ServerToClient {
             System.out.println("Có client kết nối");
             DataOutputStream dout = new DataOutputStream(socket.getOutputStream());
 
-            // Gửi thời gian hiện tại
+            // Gửi thời gian hiện tạids
             String time = new Date().toString();
             dout.writeUTF(time);
 
